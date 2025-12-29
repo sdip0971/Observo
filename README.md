@@ -14,6 +14,10 @@ Built with **Next.js 16**, **Supabase**, and **Inngest**, Observo bridges the ga
 - **🔌 Easy Integration**: Simple copy-paste snippet for any HTML/JS website.
 - **🛡 Privacy Focused**: No cookies required by default; respects user privacy.
 - **🏗 Scalable Architecture**: Uses **Inngest** for background processing to handle high-traffic loads without blocking APIs.
+  <img width="1605" height="922" alt="Screenshot 2025-12-29 at 8 33 38 PM" src="https://github.com/user-attachments/assets/5005c4fd-480d-450e-aab2-cec3dc02e194" />
+
+<img width="1605" height="922" alt="Screenshot 2025-12-29 at 8 33 04 PM" src="https://github.com/user-attachments/assets/788a15ba-0a71-4c2f-942b-320ebe8d68d3" />
+<img width="1233" height="450" alt="Screenshot 2025-12-29 at 8 34 09 PM" src="https://github.com/user-attachments/assets/3cb6dfdb-0136-47fd-9730-590cfe7b27e6" />
 
 ## 🛠 Tech Stack
 
