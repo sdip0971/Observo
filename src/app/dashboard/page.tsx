@@ -43,7 +43,8 @@ import useUser from "@/hooks/useUser";
 import { supabase } from "@/config/supabase";
 import { Project } from "@/types";
 import { SidebarComponent } from "@/components/ui/my components/sidebar";
-
+import { useSetAtom } from "jotai";
+import { projectsAtom } from "@/store/atom";
 
 
 const GridPattern = () => (
@@ -57,6 +58,8 @@ export default function WorkspacePage() {
   const [creatingProject, setCreatingProject] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const setGlobalProjects = useSetAtom(projectsAtom);
 
   const [projectName, setProjectName] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -73,8 +76,10 @@ export default function WorkspacePage() {
       .order("created_at", { ascending: false });
 
     if (error) console.error("Error fetching projects:", error);
-    else setProjects(data ?? []);
-  };
+    else {setProjects(data ?? []);
+    setGlobalProjects(data ?? []);
+  }
+};
 
   // Create Project
   const createProject = async () => {
