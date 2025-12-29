@@ -2,13 +2,41 @@ import { sendAlert } from "@/lib/alert";
 import { inngest } from "./client";
 import { supabase } from "@/config/supabase";
 
-export const checkTrafficMilestone = inngest.createFunction(
-  { id: "check-traffic-milestone" },
-  { event: "analytics/page-viewed" }, // 👈 Trigger: When a page is viewed
+export const processPageView = inngest.createFunction(
+  { id: "process-page-view" },
+  { event: "analytics/page-viewed" },
   async ({ event, step }) => {
-    const { domain, project_id } = event.data;
+    const {
+      projectId,
+      domain,
+      url,
+      referrer,
+      city,
+      country,
+      region,
+      browser,
+      device,
+      os,
+    } = event.data;
 
-    // Step 1: Check Database Count (Retriable logic)
+    await step.run("record-page-view", async () => {
+      const { error } = await supabase.from("page_views").insert({
+        domain: domain,
+        page: url || "unknown",
+        referrer: referrer || null,
+        city: city || "Unknown",
+        country: country || "Unknown",
+        region: region || "Unknown",
+        browser_name: browser || "Unknown",
+        device_type: device || "Unknown",
+        operating_system: os || "Unknown",
+      });
+
+      if (error) throw error; 
+      return { success: true };
+    });
+
+
     const count = await step.run("get-page-view-count", async () => {
       const { count } = await supabase
         .from("page_views")
@@ -17,30 +45,25 @@ export const checkTrafficMilestone = inngest.createFunction(
       return count || 0;
     });
 
-   
     if (count > 0 && count % 100 === 0) {
- 
       await step.run("send-notifications", async () => {
-        
         const { data: project } = await supabase
           .from("projects")
           .select("name")
-          .eq("id", project_id)
+          .eq("id", projectId)
           .single();
 
         await sendAlert({
-          projectId: project_id,
-          title: "🚀 Traffic Milestone!",
+          projectId: projectId,
+          title: "Traffic Milestone!",
           message: `**${
             project?.name || domain
           }** just hit **${count}** views!`,
           color: 0x00ff00,
         });
       });
-
-      return { milestone: true, count };
     }
 
-    return { milestone: false, count };
+    return { count };
   }
 );

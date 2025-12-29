@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { inngest } from "@/inngest/client";
 
 
 
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     // 4. Verify Source exists
     const { data: source, error: sourceError } = await supabaseAdmin
       .from("sources")
-      .select("id")
+      .select("id, project_id, domain") 
       .eq("write_key", writeKey)
       .single();
 
@@ -99,6 +100,23 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) throw insertError;
+   if (type === "page_view" || type === "pageview") {
+     await inngest.send({
+       name: "analytics/page-viewed",
+       data: {
+         projectId: source.project_id,
+         domain: source.domain,
+         url: payload.url,
+         referrer: payload.referrer,
+         city: payload.city,
+         country: payload.country,
+         region: payload.region,
+         browser: payload.browserName,
+         device: payload.deviceType,
+         os: payload.operatingSystem,
+       },
+     });
+   }
 
     return NextResponse.json({ success: true }, { status: 202,headers:corsHeaders(req) });
   } catch (error) {
