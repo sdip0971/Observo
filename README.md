@@ -1,4 +1,4 @@
-<img width="1233" height="904" alt="Screenshot 2025-12-29 at 9 20 27 PM" src="https://github.com/user-attachments/assets/464e61ee-2151-47cc-b5fb-1d9b6ce0297c" /># Observo 
+# Observo 
 
 **Observo** is a modern, privacy-friendly real-time analytics and observability platform. It allows you to track website traffic, capture custom events, and receive instant alerts (Discord/Telegram) when critical milestones are reached.
 
