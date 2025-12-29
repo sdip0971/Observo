@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Provider } from "jotai";
 
 
 
@@ -24,24 +25,29 @@ export default function RootLayout({
  
    
   return (
-    <html lang="en">
-      <body
-        className={[
-          inter.className,
-          "min-h-screen",
-          "bg-neutral-950",
-          "text-neutral-100",
-          "antialiased",
-        ].join(" ")}
-      >
-        {/* App Root */}
-        <div id="app-root" className="relative md:pr-8 overflow-y-auto min-h-screen w-screen overflow-hidden">
-          {children}
-        </div>
+    <Provider>
+      <html lang="en">
+        <body
+          className={[
+            inter.className,
+            "min-h-screen",
+            "bg-neutral-950",
+            "text-neutral-100",
+            "antialiased",
+          ].join(" ")}
+        >
+          {/* App Root */}
+          <div
+            id="app-root"
+            className="relative md:pr-8 overflow-y-auto min-h-screen w-screen overflow-hidden"
+          >
+            {children}
+          </div>
 
-        {/* Global UI utilities */}
-        <Toaster />
-      </body>
-    </html>
+          {/* Global UI utilities */}
+          <Toaster />
+        </body>
+      </html>
+    </Provider>
   );
 }

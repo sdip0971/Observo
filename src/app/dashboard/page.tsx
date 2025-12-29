@@ -121,7 +121,7 @@ export default function WorkspacePage() {
   };
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("/signin");
+    router.replace("/");
   };
 
   useEffect(() => {
