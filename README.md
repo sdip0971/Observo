@@ -160,9 +160,7 @@ Paste a Discord Webhook URL to get notifications in a Discord channel.
 
 Enable alerts to receive a message whenever your site hits a traffic milestone (e.g., every 100 views).
 
-📡 API Reference
-Ingest Endpoint
-The primary endpoint used by the tracking script.
+Open [http://localhost:3000](http://:3000) with your browser to see the result.
 
 POST /api/v1/ingest
 

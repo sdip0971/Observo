@@ -5,7 +5,7 @@
   const scriptTag = document.currentScript;
   const writeKey = scriptTag.getAttribute("data-write-key");
   // Default to the current domain's API if not specified (useful for self-hosting)
-  const endpoint = scriptTag.getAttribute("data-endpoint") || "http://localhost:3000/api/v1/ingest";
+  const endpoint = scriptTag.getAttribute("data-endpoint") || "observo-xi.vercel.app/api/v1/ingest";
 
   if (!writeKey) {
     console.error("Observo: Missing data-write-key attribute.");
