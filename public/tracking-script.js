@@ -25,7 +25,7 @@
         referrer: document.referrer,
         width: window.screen.width,
         language: navigator.language,
-        user_agent: navigator.userAgent, // (Server parses this, but good to have)
+        user_agent: navigator.userAgent, 
       },
     };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ProjectHealth } from "@/components/ui/my components/project-health";
 import Link from "next/link";
 import {
   Plus,
@@ -14,6 +15,8 @@ import {
   MoreVertical,
   FolderGit2,
   Cpu,
+  Trash2,
+  SettingsIcon,
 
 } from "lucide-react";
 
@@ -32,6 +35,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -52,9 +56,11 @@ export default function WorkspacePage() {
   const { user, loading: authLoading } = useUser();
   const [creatingProject, setCreatingProject] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [projectName, setProjectName] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
-const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Fetch Projects
@@ -72,7 +78,7 @@ const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Create Project
   const createProject = async () => {
-    if (creatingProject|| !projectName.trim() || !user) return;
+    if (creatingProject || !projectName.trim() || !user) return;
     setCreatingProject(true);
 
     const { error } = await supabase.from("projects").insert({
@@ -84,31 +90,53 @@ const [projectsLoading, setProjectsLoading] = useState(false);
       console.error("Create project error:", error.message);
     } else {
       setProjectName("");
-      setIsCreateOpen(false); 
+      setIsCreateOpen(false);
       await fetchProjects();
     }
     setCreatingProject(false);
   };
+  const handleDeleteProject = async (projectId: string) => {
+    const confirm = window.confirm(
+      "Are you sure? This will delete the project and ALL its data permanently."
+    );
+    if (!confirm) return;
 
+    setProjects(projects.filter((p) => p.id !== projectId));
+
+    const { error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+
+    if (error) {
+      console.error("Error deleting project:", error);
+
+      fetchProjects();
+    }
+  };
   const handleLogout = async () => {
     await supabase.auth.signOut();
-     router.replace("/signin");
+    router.replace("/signin");
   };
 
-useEffect(() => {
-  if (!user) return;
-  
+  useEffect(() => {
+    if (!user) return;
 
-  setProjectsLoading(true);
-  fetchProjects().finally(() => setProjectsLoading(false));
-}, [user]);
+    setProjectsLoading(true);
+    fetchProjects().finally(() => setProjectsLoading(false));
+  }, [user]);
+
+  const filteredProjects = projects.filter((project) =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-indigo-500/30">
       <GridPattern />
 
-      {user && <SidebarComponent onLogout={handleLogout} />}
+      {user && <SidebarComponent onLogoutAction={handleLogout} />}
 
       <main className="lg:pl-64 min-h-screen transition-all duration-300">
         <div className="lg:hidden flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 backdrop-blur px-4">
@@ -137,6 +165,8 @@ useEffect(() => {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500" />
                 <Input
                   placeholder="Filter projects..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-64 pl-9 bg-zinc-900/50 border-zinc-800 text-sm focus-visible:ring-indigo-500/50"
                 />
               </div>
@@ -214,10 +244,12 @@ useEffect(() => {
               </Button>
             </div>
           ) : (
+            // Projects Grid
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {projects.map((project) => (
+              {filteredProjects.map((project) => (
                 <Link key={project.id} href={`/project/${project.id}`}>
-                  <div className="group relative flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 hover:border-zinc-700 hover:bg-zinc-900/60 transition-all cursor-pointer">
+                  <div className="group relative flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 hover:border-zinc-700 hover:bg-zinc-900/60 transition-all cursor-pointer h-full">
+                    {/* Card Header */}
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-indigo-400 group-hover:text-indigo-300 group-hover:bg-indigo-500/10 transition-colors">
@@ -227,13 +259,13 @@ useEffect(() => {
                           <h3 className="font-medium text-zinc-200 group-hover:text-white transition-colors">
                             {project.name}
                           </h3>
-                          <p className="text-xs text-zinc-500">
-                            {/* Format date nicely if available, else static text */}
-                            Last active: Just now
-                          </p>
+                          <div className="mt-1">
+                            <ProjectHealth projectId={project.id} />
+                          </div>
                         </div>
                       </div>
 
+                      {/* Dropdown Actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -246,30 +278,61 @@ useEffect(() => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="bg-zinc-950 border-zinc-800 text-zinc-300"
+                          className="bg-zinc-950 border-zinc-800 text-zinc-300 w-48"
                         >
-                          <DropdownMenuItem className="focus:bg-zinc-900 focus:text-zinc-100 cursor-pointer">
-                            View Settings
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/project/${project.id}`}
+                              className="w-full cursor-pointer focus:bg-zinc-900 focus:text-zinc-100 group flex items-center"
+                            >
+                              <SettingsIcon className="mr-2 h-4 w-4 text-zinc-500 group-hover:text-zinc-300" />
+                              View Details
+                            </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-400 focus:text-red-300 focus:bg-red-950/20 cursor-pointer">
+
+                          <DropdownMenuSeparator className="bg-zinc-800" />
+
+                          <DropdownMenuItem
+                            className="text-red-400 focus:text-red-300 focus:bg-red-950/20 cursor-pointer flex items-center"
+                            onClick={(e) => {
+                              e.preventDefault(); // Prevent Link navigation
+                              handleDeleteProject(project.id);
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete Project
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
 
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
-                        <span>Health</span>
-                        <span className="text-emerald-400">98%</span>
+                    {/* Card Footer */}
+                    <div className="mt-6 pt-4 border-t border-zinc-800/50 flex items-center justify-between text-xs text-zinc-500">
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-3 w-3" />
+                        <span>Monitoring Active</span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
-                        <div className="h-full w-[98%] bg-emerald-500 rounded-full" />
-                      </div>
+                      <span className="font-mono opacity-50">
+                        ID: {project.id.slice(0, 4)}...
+                      </span>
                     </div>
                   </div>
                 </Link>
               ))}
+
+              {/* No Search Results State */}
+              {filteredProjects.length === 0 && projects.length > 0 && (
+                <div className="col-span-full py-12 text-center text-zinc-500">
+                  <p>No projects found matching "{searchQuery}"</p>
+                  <Button
+                    variant="link"
+                    onClick={() => setSearchQuery("")}
+                    className="text-indigo-400"
+                  >
+                    Clear filter
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

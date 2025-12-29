@@ -13,6 +13,10 @@ export interface Project {
   owner_id: string;
   name: string;
   created_at: string;
+  discord_webhook_url?: string;
+  telegram_bot_token?: string;
+  telegram_chat_id?: string;
+  alerts_enabled?: boolean;
 }
 export interface Source {
   id: string;
