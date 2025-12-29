@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EventsList } from "@/components/ui/my components/event-list";
 import { useParams, useRouter } from "next/navigation";
-import { z } from "zod";
+import { set, z } from "zod";
 import {
   ArrowLeft,
   Plus,
@@ -12,6 +12,8 @@ import {
   Copy,
   Check,
   Server,
+  Loader2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,7 @@ import useUser from "@/hooks/useUser";
 import { Project, Source } from "@/types";
 import { Snippet } from "@/components/ui/my components/snippet";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const createSourceSchema = z.object({
   name: z
@@ -55,10 +58,19 @@ export default function ProjectDetailsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newSourceName, setNewSourceName] = useState("");
   const [newSourceDomain, setNewSourceDomain] = useState("");
+
+ const [isEditing, setIsEditing] = useState(false);
+ const [localName, setLocalName] = useState("");
+ const [isSaving, setIsSaving] = useState(false); 
+ const inputRef = useRef<HTMLInputElement>(null);
+
   const [creating, setCreating] = useState(false);
   const [errors, setErrors] = useState<{ name?: string[]; domain?: string[] }>({});
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+
+  
 
   useEffect(() => {
     if (!user || !id) return;
@@ -72,6 +84,7 @@ export default function ProjectDetailsPage() {
           .single();
         if (projectError) throw projectError;
         setProject(projectData);
+        setLocalName(projectData.name|| "")
 
         const { data: sourcesData, error: sourcesError } = await supabase
           .from("sources")
@@ -89,6 +102,38 @@ export default function ProjectDetailsPage() {
     };
     fetchData();
   }, [user, id, router]);
+
+
+  useEffect(() => {
+    
+    
+    if (!project || localName === project.name) return;
+
+    setIsSaving(true);
+    const handler = setTimeout(async () => {
+ 
+      const { error } = await supabase
+        .from("projects")
+        .update({ name: localName })
+        .eq("id", project.id);
+
+      if (!error) {
+        setProject({ ...project, name: localName }); 
+     
+      } else {
+        console.error("Failed to save name");
+      }
+         setIsSaving(false);
+    }, 1000); 
+
+    return () => clearTimeout(handler);
+  }, [localName, project]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
 
   const createSource = async () => {
     if (!user) return;
@@ -156,9 +201,52 @@ export default function ProjectDetailsPage() {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
-                {project.name}
-              </h1>
+              {isEditing ? (
+                <div className="relative w-full max-w-md">
+                  <Input
+                    ref={inputRef}
+                    value={localName}
+                    onChange={(e) => setLocalName(e.target.value)}
+                    onBlur={() => setIsEditing(false)} // Save & Close on click away
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        inputRef.current?.blur(); // Triggers onBlur to close
+                      }
+                    }}
+                    className="text-3xl font-bold h-auto py-1 px-2 bg-zinc-900 border-zinc-700 text-white focus-visible:ring-indigo-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500">
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Saved"
+                    )}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-row">
+                    <h1
+                      onClick={() => setIsEditing(true)}
+                      className="text-3xl font-bold tracking-tight text-white cursor-pointer hover:underline decoration-zinc-700 decoration-2 underline-offset-4"
+                    >
+                      {localName}
+                    </h1>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mt-0.5 ml-4 h-8 w-8 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {isSaving && (
+                      <Loader2 className="h-4 w-4 text-zinc-600 animate-spin" />
+                    )}
+                  </div>
+                </>
+              )}
+
               <p className="text-zinc-400 mt-1">
                 Manage data sources and API keys
               </p>
@@ -235,52 +323,47 @@ export default function ProjectDetailsPage() {
             </div>
           ) : (
             sources.map((source) => (
-          
-                <Link
-                  key={source.id}
-                  href={`/project/${id}/source/${source.id}`}
-                >
-                  <div className="flex flex-col  sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                        <Globe className="h-5 w-5" />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-zinc-100">
-                            {source.name}
-                          </h3>
-                          <span className="inline-flex items-center rounded-full bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-400/20">
-                            Active
-                          </span>
-                        </div>
-                        <p className="text-sm text-zinc-500 font-mono">
-                          {source.domain || "No domain configured"}
-                        </p>
-                      </div>
+              <Link key={source.id} href={`/project/${id}/source/${source.id}`}>
+                <div className="flex flex-col  sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      <Globe className="h-5 w-5" />
                     </div>
-
-                    <div className="flex items-center gap-3 bg-zinc-950 p-2 pl-4 rounded-lg border border-zinc-800/50">
-                      <Key className="h-4 w-4 text-zinc-500" />
-                      <code className="font-mono text-sm text-zinc-400">
-                        {source.write_key}
-                      </code>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 hover:bg-zinc-800 hover:text-white"
-                        onClick={() => copyToClipboard(source.write_key)}
-                      >
-                        {copiedKey === source.write_key ? (
-                          <Check className="h-4 w-4 text-emerald-400" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-zinc-100">
+                          {source.name}
+                        </h3>
+                        <span className="inline-flex items-center rounded-full bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-400/20">
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-500 font-mono">
+                        {source.domain || "No domain configured"}
+                      </p>
                     </div>
                   </div>
-                </Link>
-            
+
+                  <div className="flex items-center gap-3 bg-zinc-950 p-2 pl-4 rounded-lg border border-zinc-800/50">
+                    <Key className="h-4 w-4 text-zinc-500" />
+                    <code className="font-mono text-sm text-zinc-400">
+                      {source.write_key}
+                    </code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 hover:bg-zinc-800 hover:text-white"
+                      onClick={() => copyToClipboard(source.write_key)}
+                    >
+                      {copiedKey === source.write_key ? (
+                        <Check className="h-4 w-4 text-emerald-400" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Link>
             ))
           )}
         </div>
