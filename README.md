@@ -1,4 +1,4 @@
-# Observo 🚀
+<img width="1233" height="904" alt="Screenshot 2025-12-29 at 9 20 27 PM" src="https://github.com/user-attachments/assets/464e61ee-2151-47cc-b5fb-1d9b6ce0297c" /># Observo 
 
 **Observo** is a modern, privacy-friendly real-time analytics and observability platform. It allows you to track website traffic, capture custom events, and receive instant alerts (Discord/Telegram) when critical milestones are reached.
 
@@ -17,6 +17,7 @@ Built with **Next.js 16**, **Supabase**, and **Inngest**, Observo bridges the ga
   <img width="1605" height="922" alt="Screenshot 2025-12-29 at 8 33 38 PM" src="https://github.com/user-attachments/assets/5005c4fd-480d-450e-aab2-cec3dc02e194" />
 
 <img width="1605" height="922" alt="Screenshot 2025-12-29 at 8 33 04 PM" src="https://github.com/user-attachments/assets/788a15ba-0a71-4c2f-942b-320ebe8d68d3" />
+<img width="1233" height="904" alt="Screenshot 2025-12-29 at 9 20 37 PM" src="https://github.com/user-attachments/assets/dc81c063-00d2-47b0-8892-8b4d82fea097" />
 <img width="1233" height="450" alt="Screenshot 2025-12-29 at 8 34 09 PM" src="https://github.com/user-attachments/assets/3cb6dfdb-0136-47fd-9730-590cfe7b27e6" />
 
 ## 🛠 Tech Stack
