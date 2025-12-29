@@ -7,7 +7,7 @@ function LogoutButton() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/signin"); // IMPORTANT
+    router.replace("/"); 
   };
 
   return (
