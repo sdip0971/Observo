@@ -1,4 +1,5 @@
 import { supabase } from "@/config/supabase";
+import { inngest } from "@/inngest/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const corsHeaders = {
@@ -62,6 +63,23 @@ export async function POST(request: NextRequest) {
         }]);
 
       if (error) throw error;
+
+      const { data: source } = await supabase
+        .from("sources")
+        .select("project_id")
+        .eq("domain", domain)
+        .single();
+
+      if (source) {
+        await inngest.send({
+          name: "analytics/page-viewed",
+          data: {
+            domain: domain,
+            project_id: source.project_id
+          },
+        });
+      }
+      
     }
 
     if (event === "session_start") {
@@ -71,6 +89,7 @@ export async function POST(request: NextRequest) {
           website_id: domain, 
           source: source || "direct",
         }]);
+
 
       if (error) throw error;
     }

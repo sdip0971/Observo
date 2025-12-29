@@ -88,9 +88,9 @@ export async function POST(req: NextRequest) {
     // 5. Insert Validated Data
     const { error: insertError } = await supabaseAdmin.from("events").insert({
       source_id: source.id,
-      type: type, // Verified string
+      type: type,
       payload: {
-        ...payload, // Verified object
+        ...payload, 
         // Enriched Metadata
         request_ip: headersList.get("x-forwarded-for") || "unknown",
         user_agent: headersList.get("user-agent"),

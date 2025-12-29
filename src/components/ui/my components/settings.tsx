@@ -155,7 +155,7 @@ export function SourceSettings({ source, projectId }: SourceSettingsProps) {
             </Button>
           </div>
 
-          <div className="h-[1px] bg-zinc-800 w-full" />
+          <div className="h-px bg-zinc-800 w-full" />
 
           {/* Danger Zone */}
           <div className="space-y-3">
