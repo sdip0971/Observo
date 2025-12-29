@@ -1,27 +1,66 @@
+"use client"
 import { supabase } from '@/config/supabase';
 import { useRouter } from 'next/navigation';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+
 import { Command } from '../command';
 import { Button } from '../button';
 import { LogOut, Mail, Shield, User } from 'lucide-react';
 import { SidebarComponent } from './sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../card';
 import useUser from '@/hooks/useUser';
+import { useAtom } from 'jotai';
+import { projectsAtom } from '@/store/atom';
+import { Project } from '@/types';
+import { AlertSettings } from './analytics/alert-settings';
 
 function SettingsDash() {
       const router = useRouter();
-      const { user, loading } = useUser();
+      const { user} = useUser();
+      const [loading, setLoading] = useState(true);
+      const [globalProjects, setGlobalProjects] = useAtom(projectsAtom);
+
+      const [selectedProject, setSelectedProject] = useState<Project | null>(
+        null
+      );
 
       const handleLogout = async () => {
         await supabase.auth.signOut();
         router.replace("/signin");
       };
+      useEffect(() => {
+        if (!user) return;
 
+        const initializeData = async () => {
+          // A. Check if we already have data in memory
+          if (globalProjects.length > 0) {
+            setSelectedProject(globalProjects[0]);
+            setLoading(false);
+            return; 
+          }
+
+          // B. Fallback: Fetch only if memory is empty (e.g. hard refresh)
+          setLoading(true);
+          const { data, error } = await supabase
+            .from("projects")
+            .select("*")
+            .eq("owner_id", user.id)
+            .order("created_at", { ascending: false });
+
+          if (data) {
+            setGlobalProjects(data); // Save for later
+            setSelectedProject(data[0]);
+          }
+          setLoading(false);
+        };
+
+        initializeData();
+      }, [user, globalProjects, setGlobalProjects]);
       if (loading) return null;
 
   return (
     <div>
-       <div className="fixed inset-0 -z-10 h-full w-full bg-zinc-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]" />
+      <div className="fixed inset-0 -z-10 h-full w-full bg-zinc-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]" />
 
       <div className="lg:hidden flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 backdrop-blur px-4">
         <div className="flex items-center gap-2 text-indigo-400 font-bold">
@@ -113,11 +152,22 @@ function SettingsDash() {
                 </div>
               </CardContent>
             </Card>
+            
+            {selectedProject && (
+              <div
+                key={selectedProject.id}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+              >
+                <AlertSettings project={selectedProject} />
+              </div>
+            )}
+
+            
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }
 
 export default SettingsDash
