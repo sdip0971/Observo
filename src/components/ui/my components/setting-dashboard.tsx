@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react'
 
 import { Command } from '../command';
 import { Button } from '../button';
-import { LogOut, Mail, Shield, User } from 'lucide-react';
+import { Loader2, LogOut, Mail, Shield, User } from 'lucide-react';
 import { SidebarComponent } from './sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../card';
 import useUser from '@/hooks/useUser';
@@ -16,8 +16,10 @@ import { AlertSettings } from './analytics/alert-settings';
 
 function SettingsDash() {
       const router = useRouter();
-      const { user} = useUser();
-      const [loading, setLoading] = useState(true);
+      const { user,loading} = useUser();
+      const [dataLoading, setDataLoading] = useState(true);
+
+      
       const [globalProjects, setGlobalProjects] = useAtom(projectsAtom);
 
       const [selectedProject, setSelectedProject] = useState<Project | null>(
@@ -29,18 +31,22 @@ function SettingsDash() {
         router.replace("/signin");
       };
       useEffect(() => {
-        if (!user) return;
+        if ( loading) return;
+        if(!user){
+          router.replace("/login");
+          return;
+        }
 
         const initializeData = async () => {
           // A. Check if we already have data in memory
           if (globalProjects.length > 0) {
             setSelectedProject(globalProjects[0]);
-            setLoading(false);
+            setDataLoading(false);
             return; 
           }
 
           // B. Fallback: Fetch only if memory is empty (e.g. hard refresh)
-          setLoading(true);
+          setDataLoading(true);
           const { data, error } = await supabase
             .from("projects")
             .select("*")
@@ -51,12 +57,19 @@ function SettingsDash() {
             setGlobalProjects(data); // Save for later
             setSelectedProject(data[0]);
           }
-          setLoading(false);
+          setDataLoading(false);
         };
 
         initializeData();
       }, [user, globalProjects, setGlobalProjects]);
       if (loading) return null;
+      if (loading || dataLoading) {
+        return (
+          <div className="flex h-screen w-full items-center justify-center bg-zinc-950">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          </div>
+        );
+      }
 
   return (
     <div>
