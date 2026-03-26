@@ -261,3 +261,20 @@ export interface AnalyticsEvent {
     domain: string;
   };
 }
+export interface ServerMetricRow {
+  id: string;
+  created_at: string;
+  source_id: string;
+  server_name: string;
+  cpu_percent: number;
+  memory_percent: number;
+  disk_percent: number;
+  uptime: string;
+}
+export interface ServerMetricsPayload {
+  server_name: string;
+  cpu_percent: number;
+  memory_percent: number;
+  disk_percent: number;
+  uptime: string 
+}

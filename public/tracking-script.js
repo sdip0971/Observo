@@ -1,17 +1,24 @@
 (function () {
   "use strict";
+  if(window.setObservationFlag){
+    return
+  }
+  window.setObservationFlag= true;
+
 
   // 1. Get configuration from the script tag attributes
   const scriptTag = document.currentScript;
   const writeKey = scriptTag.getAttribute("data-write-key");
   // Default to the current domain's API if not specified (useful for self-hosting)
-  const endpoint = scriptTag.getAttribute("data-endpoint") || "observo-xi.vercel.app/api/v1/ingest";
+  const endpoint =
+  scriptTag.getAttribute("data-endpoint") ||
+  "https://observo-xi.vercel.app/api/v1/ingest";
 
   if (!writeKey) {
     console.error("Observo: Missing data-write-key attribute.");
     return;
   }
-
+ 
   // 2. Helper to send events
   function sendEvent(type, payload = {}) {
     // Basic browser data
@@ -50,51 +57,16 @@
   // Track History API changes (SPA navigation like Next.js/React)
   const originalPushState = history.pushState;
   history.pushState = function () {
-    originalPushState.apply(this, arguments);
-    sendEvent("page_view");
-  };
-//   7.1️⃣ history.pushState — what is it?
-// What browsers normally do
+  originalPushState.apply(this, arguments);
+  sendEvent("page_view");
+};
 
-// When a SPA navigates:
+const originalReplaceState = history.replaceState;
 
-// history.pushState({}, "", "/pricing");
-
-
-// This:
-
-// Changes the URL
-
-// Does NOT reload the page
-
-// React Router, Next.js, Vue Router all use this internally.
-
-// Why we override it
-
-// Original behavior:
-
-// URL changes
-
-// ❌ Analytics knows nothing
-
-// We do this instead 👇
-
-// const originalPushState = history.pushState;
-
-
-// 📌 Save the original browser function so we don’t break it.
-
-// Overriding it
-// history.pushState = function () {
-//   originalPushState.apply(this, arguments);
-//   sendEvent("page_view");
-// };
-
-// What this REALLY means (plain English):
-
-// “Whenever the app changes the URL,
-// first do the normal browser behavior,
-// then send a page_view event.”
+history.replaceState = function () {
+  originalReplaceState.apply(this, arguments);
+  sendEvent("page_view");
+};
 
   window.addEventListener("popstate", () => {
     sendEvent("page_view");
@@ -112,17 +84,6 @@
 //   sendEvent("page_view");
 // });
 
-// Why this is needed
-
-// Without this:
-
-// Back button changes page
-
-// ❌ No page view recorded
-
-// With this:
-
-// Back / Forward = new page view
 
 // Analytics stays accurate
 

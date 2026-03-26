@@ -119,9 +119,8 @@ const signInWithProvider = async (provider: "google" | "github") => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-       redirectTo:process.env.NEXT_PUBLIC_APP_URL 
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
-      : `${window.location.origin}/dashboard`
+        // Send them straight to the dashboard locally
+        redirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
