@@ -7,11 +7,19 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/config/supabase";
 import useUser from "@/hooks/useUser";
 import { Source } from "@/types";
-import { Snippet } from "@/components/ui/my components/snippet"; // Move Snippet import here
-import { AnalyticsDashboard } from "@/components/ui/my components/analytic-dashboard";// We will create this next
-
+import { Snippet } from "@/components/ui/my components/snippet"; 
+import { AnalyticsDashboard } from "@/components/ui/my components/analytic-dashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ServerDashboard } from "@/components/ui/my components/server-dashboard";
+import { ActiveVisitorsCard } from "@/components/ui/my components/active-user";
+import { PerformanceWidget } from "@/components/ui/my components/analytics/performanc-widget";
+import { TrafficChart } from "@/components/ui/my components/analytics/traffic-chart";
+import { TopPagesList } from "@/components/ui/my components/analytics/top-page-list";
+import { CustomEventsList } from "@/components/ui/my components/analytics/custom-events";
+import { TopDevicesList } from "@/components/ui/my components/analytics/top-devices";
+import { TopReferrersList } from "@/components/ui/my components/analytics/top-reffers";
 export default function SourceDetailsPage() {
-  const params = useParams();
+const params = useParams();
   const { id: projectId, sourceId } = params;
   const { user } = useUser();
   const router = useRouter();
@@ -78,17 +86,63 @@ export default function SourceDetailsPage() {
           </div>
         </div>
 
-        {/* 1. Analytics Dashboard (The Charts) */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Overview</h2>
-          <AnalyticsDashboard sourceId={sourceId as string} />
-        </div>
+<Tabs defaultValue="web" className="space-y-6">
+  <TabsList className="bg-zinc-900 border border-zinc-800">
+    <TabsTrigger value="web">Web Analytics</TabsTrigger>
+    <TabsTrigger value="server">Server Health</TabsTrigger>
+  </TabsList>
+  <TabsContent value="web" className="space-y-8 animate-in fade-in-50 duration-500">
+      <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-1">
+                <ActiveVisitorsCard sourceId={sourceId as string} />
+              </div>
+              <div className="md:col-span-2">
+                {source && <PerformanceWidget source={source} />}
+              </div>
+            </div>
 
-        {/* 2. Integration Snippet (Specific to this source) */}
-        <div className="pt-8 border-t border-zinc-800 space-y-4">
-          <h2 className="text-lg font-semibold text-white">Integration</h2>
-          <Snippet writeKey={source.write_key} />
-        </div>
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-white">Overview</h2>
+              <AnalyticsDashboard sourceId={sourceId as string} />
+            </div>
+            
+            <TrafficChart sourceId={sourceId as string} />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <TopPagesList sourceId={sourceId as string} />
+              <TopReferrersList sourceId={sourceId as string} />
+              <TopDevicesList sourceId={sourceId as string} />
+              <CustomEventsList sourceId={sourceId as string} />
+            </div>
+
+            <div className="pt-8 border-t border-zinc-800 space-y-4">
+              <h2 className="text-lg font-semibold text-white">Integration</h2>
+              <Snippet writeKey={source.write_key} />
+            </div>
+
+   </TabsContent>
+   <TabsContent value="server" className="space-y-8 animate-in fade-in-50 duration-500">
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Server Telemetry</h2>
+                <span className="text-sm text-zinc-400">Live updating via Agent</span>
+              </div>
+              
+              {/* Drop in the new component! */}
+              <ServerDashboard sourceId={sourceId as string} />
+            </div>
+
+          
+            <div className="pt-8 border-t border-zinc-800 space-y-4">
+              <h2 className="text-lg font-semibold text-white">Agent Installation</h2>
+              <p className="text-zinc-400 text-sm">Deploy the Observo Agent to your server to start receiving telemetry data.</p>
+              {/* Coming next: A beautiful copy-paste block for the bash script */}
+            </div>
+
+          </TabsContent>
+
+        </Tabs>
       </div>
     </div>
   );
